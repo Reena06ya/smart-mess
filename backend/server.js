@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 // Ensure dotenv can find .env if present
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 require('dotenv').config();
@@ -46,8 +47,20 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Root endpoint for Render health checks and browser verification
-app.get('/', (req, res) => {
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'online',
+    appName: 'Smart Mess – Hostel Mess Management Portal API',
+    version: '1.0.0',
+    databaseReady: mongoose.connection.readyState === 1,
+    timestamp: new Date().toISOString(),
+    istTime: new Date(new Date().getTime() + (new Date().getTimezoneOffset() + 330) * 60000).toLocaleString('en-IN'),
+  });
+});
+
+// API Status endpoint for diagnostics
+app.get('/api/status', (req, res) => {
   const dbStates = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
   const currentDbState = dbStates[mongoose.connection.readyState] || 'unknown';
 
@@ -59,7 +72,7 @@ app.get('/', (req, res) => {
     dbConnected: mongoose.connection.readyState === 1,
     message: mongoose.connection.readyState === 1
       ? 'Backend and MongoDB are connected and running smoothly!'
-      : 'Backend is running. MongoDB is currently not connected. Please verify MONGODB_URI in your Render environment variables and ensure MongoDB Atlas allows 0.0.0.0/0 IP access.',
+      : 'Backend is running. MongoDB is currently not connected.',
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
@@ -76,18 +89,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'online',
-    appName: 'Smart Mess – Hostel Mess Management Portal API',
-    version: '1.0.0',
-    databaseReady: mongoose.connection.readyState === 1,
-    timestamp: new Date().toISOString(),
-    istTime: new Date(new Date().getTime() + (new Date().getTimezoneOffset() + 330) * 60000).toLocaleString('en-IN'),
-  });
-});
-
 // Mount Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
@@ -99,7 +100,38 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 
-// Error Middlewares
+// Serve Frontend Static Site (Full-Stack single deployment)
+const frontendDistPath = path.join(__dirname, '..', 'frontend', 'dist');
+
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+
+  // SPA fallback: any non-API route serves index.html so React Router handles the UI
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+} else {
+  // Fallback root endpoint if frontend is not yet built
+  app.get('/', (req, res) => {
+    const dbStates = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+    const currentDbState = dbStates[mongoose.connection.readyState] || 'unknown';
+    res.status(200).json({
+      status: 'online',
+      appName: 'Smart Mess – Hostel Mess Management Portal API',
+      version: '1.0.0',
+      database: currentDbState,
+      dbConnected: mongoose.connection.readyState === 1,
+      message: mongoose.connection.readyState === 1
+        ? 'Backend and MongoDB are connected and running smoothly!'
+        : 'Backend is running. MongoDB is currently not connected.',
+    });
+  });
+}
+
+// Error Middlewares for unmatched API endpoints
 app.use(notFound);
 app.use(errorHandler);
 

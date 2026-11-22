@@ -14,10 +14,10 @@ frontend/node_modules/
 backend/.env
 
 # Production Builds
-dist/
+/dist/
 build/
-frontend/dist/
 frontend/build/
+!frontend/dist/**
 
 # Vite Cache
 .vite/
