@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-// Smart normalizer for API Base URL on Render or Local
+// Smart normalizer for API Base URL on Render, Vercel, or Local
 const getApiBaseUrl = () => {
   let url = import.meta.env.VITE_API_BASE_URL || '/api';
   if (!url || typeof url !== 'string' || url.trim() === '') return '/api';
@@ -9,8 +9,11 @@ const getApiBaseUrl = () => {
   if (!url.startsWith('http://') && !url.startsWith('https://')) {
     url = `https://${url}`;
   }
+  // Strip trailing slashes
+  url = url.replace(/\/+$/, '');
+  // Append /api if not already present
   if (!url.endsWith('/api')) {
-    url = `${url.replace(/\/+$/, '')}/api`;
+    url = `${url}/api`;
   }
   return url;
 };
