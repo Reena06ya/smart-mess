@@ -1,0 +1,24 @@
+{
+  "name": "smart-mess-hostel-portal",
+  "version": "1.0.0",
+  "description": "Smart Mess – Hostel Mess Management Portal",
+  "private": true,
+  "scripts": {
+    "server": "cd backend && npm run dev",
+    "server:start": "cd backend && npm start",
+    "client": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "seed": "cd backend && npm run seed"
+  },
+  "keywords": [
+    "hostel",
+    "mess",
+    "razorpay",
+    "react",
+    "mongodb",
+    "express",
+    "tailwind"
+  ],
+  "author": "Antigravity",
+  "license": "ISC"
+}
