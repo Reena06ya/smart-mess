@@ -4,10 +4,12 @@
   "description": "Smart Mess – Hostel Mess Management Portal",
   "private": true,
   "scripts": {
+    "start": "node server.js",
+    "build": "npm --prefix backend install",
+    "postinstall": "npm --prefix backend install",
     "server": "cd backend && npm run dev",
     "server:start": "cd backend && npm start",
     "client": "cd frontend && npm run dev",
-    "build": "cd frontend && npm run build",
     "seed": "cd backend && npm run seed"
   },
   "keywords": [
